@@ -2,4 +2,4 @@
 
 [Source Code](WeatherClockEmbeddedNetworking.ino)
 
-[Paper] (paper)
+[Paper](paper/conference_101719.pdf)
