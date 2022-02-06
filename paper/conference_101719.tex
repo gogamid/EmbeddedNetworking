@@ -219,8 +219,8 @@ Der PIR-Sensor selbst hat zwei Schlitze. Jeder Schlitz besteht aus einem speziel
 	\caption{PIR Sensor Funktionsweise}
 \end{figure}
 
-\subsection{Implementierung im Projekt}
-TODO
+
+
 \begin{figure}
 	\begin{center}
 		\includegraphics[scale=0.35]{pir5}
@@ -228,17 +228,28 @@ TODO
 	\caption{PIR Sensor Funktionsweise}
 \end{figure}
 
+\subsection{Implementierung im Projekt}
+Wir haben Pin 2 im Arduino für PIR Sensor benutzt und starten wir das Programm mit keine Bewegung.  Für Lesen von PIN status, haben wir variable deklariert heißt val.
+
 \begin{lstlisting}[style=CStyle]
 int inputPin = 2;	// choose the input pin (for PIR sensor)
 int pirState = LOW;	// we start, assuming no motion detected
 int val = 0;	// variable for reading the pin status
 
+\end{lstlisting}
+
+Im Setup deklarieren wir inputPin (pin 2) als INPUT pin. Das ermöglicht Sensor zu lesen.
+
+\begin{lstlisting}[style=CStyle]
 void setup()
 {
 	pinMode(inputPin, INPUT);	// declare sensor as input
-	
 }
+\end{lstlisting}\textbf{}
 
+Im Loop passiert vieles. In jede Iteration wird  inputPin digital gelesen und  zum val gespeichert. Val kann jetzt HIGH oder LOW sein. Wenn val HIGH ist,  unsere Bildschirme werden beleuchtet.  Und wenn val LOW ist, das heißt es gibt keine Bewegung, dann werden Bildschirmlichten ausgeschaltet. 
+
+\begin{lstlisting}[style=CStyle]
 void loop()
 {
 	val = digitalRead(inputPin);	// read input value
@@ -267,7 +278,361 @@ void loop()
 		}
 	}
 }
-\end{lstlisting}
+\end{lstlisting}\textbf{}
+
+\section{Real Time Clock }
+
+\subsection{Überblick}
+
+Dies ist eine großartige batteriegepufferte Echtzeituhr (RTC), die es Ihrem Mikrocontroller-Projekt ermöglicht, die Zeit zu verfolgen, selbst wenn es umprogrammiert wird oder die Stromversorgung ausfällt. Perfekt für die Datenerfassung, die Erstellung von Uhren, Zeitstempel, Timer und Alarme, usw. Der DS1307 ist der beliebteste RTC und funktioniert am besten mit 5V-basierten Chips wie dem Arduino.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.45]{rtc1}
+	\end{center}
+	\caption{RTC DS1307}
+\end{figure}
+
+\begin{itemize}
+	\item Alle Teile, einschließlich PCB, Header und Batterie sind enthalten
+	\item Schnell zu montieren und zu verwenden
+	\item Kann in jedes Breadboard eingesteckt werden, oder Sie können Drähte verwenden
+	\item Beispielcode und Bibliothek für Arduino mit einer Anleitung auf  Dokumentationsseite
+	\item Zwei Befestigungslöcher
+	\item Hält die Zeit für 5 Jahre oder länger
+\end{itemize}
+
+
+\subsection{Was ist ein RTC}
+Eine Echtzeituhr ist im Grunde wie eine Uhr - sie läuft mit einer Batterie und behält die Zeit für Sie, auch wenn der Strom ausfällt! Mit einer RTC können Sie lange Zeiträume im Auge behalten, selbst wenn Sie Ihren Mikrocontroller neu programmieren oder ihn vom USB-Anschluss oder einer Steckdose abtrennen.
+
+Die meisten Mikrocontroller, darunter auch der Arduino, haben einen eingebauten Zeitmesser namens millis(), und es gibt auch in den Chip eingebaute Timer, die längere Zeiträume wie Minuten oder Tage verfolgen können. Warum sollte man also einen separaten RTC-Chip haben wollen? Nun, der Hauptgrund ist, dass millis() nur die Zeit seit dem letzten Einschalten des Arduino erfasst. Das bedeutet, dass der Millisekunden-Timer auf 0 zurückgesetzt wird, wenn der Strom eingeschaltet wird. Der Arduino weiß nicht, dass es "Dienstag" oder "8. März" ist, er kann nur sagen: "Es sind 14.000 Millisekunden vergangen, seit ich das letzte Mal eingeschaltet wurde".
+
+Was wäre, wenn Sie die Zeit auf dem Arduino einstellen wollten? Man müsste das Datum und die Uhrzeit einprogrammieren und könnte die Zeit von diesem Zeitpunkt an zählen lassen. Aber wenn der Strom ausfällt, muss man die Zeit neu einstellen. Ähnlich wie bei sehr billigen Weckern: Jedes Mal, wenn der Strom ausfällt, blinkt 12:00
+
+Während diese Art der grundlegenden Zeitmessung für einige Projekte in Ordnung ist, benötigen einige Projekte wie Datenlogger, Uhren usw. eine konsistente Zeitmessung, die nicht zurückgesetzt wird, wenn die Arduino-Batterie stirbt oder umprogrammiert wird. Daher enthalten wir eine separate RTC! Der RTC-Chip ist ein spezieller Chip, der nur die Zeit misst. Er kann Schaltjahre zählen und weiß, wie viele Tage ein Monat hat, aber er kümmert sich nicht um die Sommerzeit (weil sie sich von Ort zu Ort ändert)
+
+Die RTC, die wir verwenden werden, ist die DS1307. Sie ist preiswert, leicht zu löten und kann jahrelang mit einer sehr kleinen Knopfzelle betrieben werden.
+
+Solange sie mit einer Knopfzelle betrieben wird, wird die RTC lange Zeit fröhlich vor sich hin ticken, auch wenn der Arduino die Stromversorgung verliert oder neu programmiert wird.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.35]{rtc}
+	\end{center}
+	\caption{RTC DS1307}
+\end{figure}
+
+\subsection{Verdrahtung}
+
+Es gibt nur 5 Pins: 5V GND SCL SDA SQW.
+
+5V wird für die Stromversorgung des RTC-Chips verwendet, wenn Sie die Uhrzeit abfragen wollen. Wenn kein 5V-Signal anliegt, geht der Chip in den Ruhezustand und verwendet die Knopfzelle als Backup.
+Verbinden Sie GND mit der gemeinsamen Strom-/Datenerde
+Verbinden Sie den SCL-Pin mit dem SCL-Pin des I2C-Taktgebers an Ihrem Arduino. Bei einem UNO \& '328 basierten Arduino ist dies auch als A5 bekannt, bei einem Mega ist es auch als digital 21 bekannt und bei einem Leonardo/Micro, digital 3
+Verbinden Sie den SDA-Pin mit dem I2C-Daten-SDA-Pin Ihres Arduino. Bei einem UNO- und '328-basierten Arduino ist dies auch als A4 bekannt, bei einem Mega ist es auch als digital 20 und bei einem Leonardo/Micro als digital 2 bekannt.
+SQW ist der optional.
+
+\subsection{Implementierung im Projekt}
+Wir benutzen RTC, damit Arduino Zeit rechnet und auf dem Display anzeigt. Startet aber Uhr nicht richtig, dafür haben wir Buttons hinzufügt damit wir Uhrzeit korrekt einstellen können. Buttons diskutieren wir später. 
+
+Für RTC braucht man zwei Bibliotheken: einmal DS1307 und ein mal RTClib.h. Hier haben wir diese Bibliotheken importiert. 
+
+\begin{lstlisting}[style=CStyle]
+#include "DS1307.h"
+#include <RTClib.h>
+\end{lstlisting}\textbf{}
+
+Danach brauchen wir variable für DS1307 Objekt und für Uhrzeitkomponenten wir Stunde, Minute, Jahr, Monat und Tag. Hier sind die Variablen.
+
+\begin{lstlisting}[style=CStyle]
+DS1307 clock; //define a object of DS1307 class
+
+int hourCnt;
+int minagg;
+int yearCnt;
+int meseagg;
+int dayagg;
+\end{lstlisting}\textbf{}
+
+Im Setup Funktion starten wir Uhr und setzen wir aktuellste Uhrzeit. Das ist Uhrzeit, in der wir dieses Projekt gemacht haben. Später kann man mit Buttons Uhrzeit ändern. 
+
+\begin{lstlisting}[style=CStyle]
+void setup(){
+	//Clock
+	clock.begin();
+	clock.fillByYMD(2022, 1, 22); //Jan 19,2013
+	clock.fillByHMS(20, 15, 0); //15:28 30"
+	clock.fillDayOfWeek(SAT);//Saturday
+	clock.setTime();//write time to the RTC chip
+}
+\end{lstlisting}\textbf{}
+
+\subsection{Integration mit Buttons}
+Push tasten oder Schalter verbinden zwei Punkte in einem Schaltkreis, wenn Sie sie drücken. In diesem Beispiel wird eine LED eingeschaltet, wenn die Taste einmal gedrückt wird, und ausgeschaltet, wenn sie zweimal gedrückt wird.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.25]{btn}
+	\end{center}
+	\caption{Buttons}
+\end{figure}
+
+Wir haben drei Buttons benutzt und alle sind mit input pullup im Setup konfiguriert. 
+
+\begin{lstlisting}[style=CStyle]
+	void setup(){
+		// Botton
+		pinMode(P1,INPUT_PULLUP);
+		pinMode(P2,INPUT_PULLUP);
+		pinMode(P3,INPUT_PULLUP);
+		int menu=0;
+	}
+\end{lstlisting}\textbf{}
+
+Eine Taste ist für menu und es gibt insgesamt 6 Menus. Jede ist für set Stunde, Minute, Jahr, Monat,  Tag und letzte ist für Speicherung.  Hier sieht man, Button 1 input wird durch digitalRead(P1) gelesen und dann Menu entsprechend Funktion ausgeführt. 
+
+\begin{lstlisting}[style=CStyle]
+void loop(){
+	 if(digitalRead(P1) == LOW)
+	{
+		menu=menu+1;
+	}
+	
+	if (menu==0)
+	{
+		DisplayDateTime();
+		
+	}
+	if (menu==1)
+	{
+		DisplaySetHour();
+		
+	}
+	if (menu==2)
+	{
+		DisplaySetMinute();
+	}
+	if (menu==3)
+	{
+		DisplaySetYear();
+		
+	}
+	if (menu==4)
+	{
+		DisplaySetMonth();
+		
+	}
+	if (menu==5)
+	{
+		DisplaySetDay();
+		
+	}
+	if (menu==6)
+	{
+		StoreAgg(); 
+		delay(500);
+		menu=0;
+	}
+	delay(100);
+	}
+
+}
+\end{lstlisting}\textbf{}
+
+\section{I2C LCD Display}
+\subsection{Warum benutzen wir I2C}
+Wenn Sie jemals versucht haben, ein LCD-Display mit einem Arduino zu verbinden, haben Sie vielleicht bemerkt, dass es eine Menge Pins am Arduino verbraucht. Selbst im 4-Bit-Modus benötigt der Arduino immer noch insgesamt sieben Anschlüsse - das ist die Hälfte der verfügbaren digitalen E/A-Pins des Arduino.
+
+Die Lösung ist die Verwendung eines I2C-LCD-Displays. Es benötigt nur zwei I/O-Pins, die nicht einmal Teil eines Satzes digitaler I/O-Pins sind, und kann auch mit anderen I2C-Geräten gemeinsam genutzt werden.
+
+\subsection{I2C LCD Hardware Übersicht}
+
+Ein typisches I2C-LCD-Display besteht aus einem HD44780-basierten Zeichen-LCD-Display und einem I2C-LCD-Adapter. Lernen wir sie nacheinander kennen.
+
+\subsubsection{Character LCD Display}
+Wie ihr Name schon sagt, sind diese LCDs ideal für die Anzeige von Text/Zeichen. Ein 16×2-Zeichen-LCD hat beispielsweise eine LED-Hintergrundbeleuchtung und kann 32 ASCII-Zeichen in zwei Reihen mit je 16 Zeichen anzeigen.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.25]{dspl}
+	\end{center}
+	\caption{Pixeln in Display}
+\end{figure}
+
+Wenn Sie genau hinsehen, können Sie die kleinen Rechtecke für jedes Zeichen auf dem Display und die Pixel sehen, aus denen ein Zeichen besteht. Jedes dieser Rechtecke ist ein Raster von 5×8 Pixeln.
+
+\subsubsection{I2C LCD Adapter}
+Das Herzstück des Adapters ist ein 8-Bit I/O Expander Chip - PCF8574. Dieser Chip wandelt die I2C-Daten von einem Arduino in die vom LCD-Display benötigten parallelen Daten um.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.35]{dspl1}
+	\end{center}
+	\caption{PCF8574}
+\end{figure}
+
+Die Platine ist außerdem mit einem kleinen Trimpot ausgestattet, mit dem der Kontrast des Displays fein eingestellt werden kann.
+
+Darüber hinaus befindet sich auf der Platine ein Jumper, der die Hintergrundbeleuchtung mit Strom versorgt. Um die Intensität der Hintergrundbeleuchtung zu steuern, können Sie den Jumper entfernen und eine externe Spannung an den mit "LED" gekennzeichneten Stift der Stiftleiste anlegen.
+
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.35]{dspl2}
+	\end{center}
+	\caption{Konfiguration von Display}
+\end{figure}
+
+\subsubsection{I2C Address of LCD}
+Wenn Sie mehrere Geräte auf demselben I2C-Bus verwenden, müssen Sie möglicherweise eine andere I2C-Adresse für die Karte einstellen, damit sie nicht mit einem anderen I2C-Gerät in Konflikt gerät.
+
+Dazu verfügt die Platine über drei Lötbrücken (A0, A1 und A2) oder Lötpads.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[scale=0.45]{dspl3}
+	\end{center}
+	\caption{Adresse setzen für Display}
+\end{figure}
+
+Jeder dieser Jumper wird zum Festcodieren der Adresse verwendet. Wenn ein Jumper mit einem Klecks Lötzinn kurzgeschlossen wird, wird die Adresse festgelegt.
+
+Ein wichtiger Punkt dabei ist, dass viele Unternehmen den gleichen PCF8574-Chip herstellen: Texas Instruments und NXP Semiconductors, um nur einige zu nennen. Und die I2C-Adresse Ihres LCDs hängt vom Hersteller des Chips ab.
+
+
+\subsubsection{Adresse finden im Projekt}
+Wir haben zwei  Displays verwendet und die Adresse zu finden war kompliziert.  Wir haben einen kleinen Code geschrieben, damit wir die Adresse finden können. Hier ist der Code: 
+
+\begin{lstlisting}[style=CStyle]
+#include <Wire.h>
+void setup() {
+	Serial.begin (115200);
+	while (!Serial)
+	{
+	}
+	Serial.println ();
+	Serial.println ("I2C scanner. Scanning ...");
+	byte count = 0;
+	Wire.begin();
+	for (byte i = 8; i < 120; i++)
+	{
+		Wire.beginTransmission (i);
+		if (Wire.endTransmission () == 0)
+		{
+			Serial.print ("Found address: ");
+			Serial.print (i, DEC);
+			Serial.print (" (0x");
+			Serial.print (i, HEX);
+			Serial.println (")");
+			count++;
+			delay (1); // maybe unneeded?
+		} // end of good response
+	} // end of for loop
+	Serial.println ("Done.");
+	Serial.print ("Found ");
+	Serial.print (count, DEC);
+	Serial.println (" device(s).");
+} // end of setup
+void loop() {}
+\end{lstlisting}\textbf{}
+
+\subsubsection{I2C LCD Display Pinout}
+
+Ein I2C-LCD hat nur 4 Pins, die die Schnittstelle zur Außenwelt bilden. Die Anschlüsse sind wie folgt:
+GND ist ein Masse-Pin und sollte mit der Masse des Arduino verbunden werden.
+
+VCC versorgt das Modul und das LCD mit Strom. Schließen Sie ihn an den 5V-Ausgang des Arduino oder an eine separate Stromversorgung an.
+
+SDA ist ein Pin für serielle Daten. Diese Leitung wird sowohl zum Senden als auch zum Empfangen verwendet. Schließen Sie ihn an den SDA-Pin des Arduino an.
+
+SCL ist ein Pin für den seriellen Takt. Dies ist ein Taktsignal, das vom Bus-Master-Gerät geliefert wird. Schließen Sie es an den SCL-Pin des Arduino an.
+
+\subsubsection{Verdrahtung}
+
+Es ist viel einfacher, ein I2C-LCD anzuschließen als ein Standard-LCD. Sie müssen nur 4 Pins anstelle von 12 anschließen. Beginnen Sie mit dem Anschluss des VIN-Pins an den 5V-Ausgang des Arduino und verbinden Sie GND mit Masse.
+
+Nun bleiben noch die Pins, die für die I2C-Kommunikation verwendet werden. Beachten Sie, dass jedes Arduino-Board unterschiedliche I2C-Pins hat, die entsprechend angeschlossen werden sollten. Bei den Arduino-Boards mit dem R3-Layout befinden sich SDA (Datenleitung) und SCL (Taktleitung) auf den Stiftleisten in der Nähe des AREF-Pins. Sie werden auch als A5 (SCL) und A4 (SDA) bezeichnet.
+
+Nachdem Sie das LCD verdrahtet haben, müssen Sie den Kontrast des Displays einstellen. Auf dem I2C-Modul finden Sie ein Potentiometer, das Sie mit einem kleinen Schraubenzieher drehen können.
+
+Stecken Sie den USB-Anschluss des Arduino ein, um das LCD mit Strom zu versorgen. Sie sollten sehen, dass die Hintergrundbeleuchtung aufleuchtet. Drehen Sie nun das Potentiometer, bis die erste Zeile des Rechtecks erscheint.
+
+\subsubsection{Bibliothek}
+Um die folgenden Sketche ausführen zu können, müssen Sie eine Bibliothek namens LiquidCrystal\_I2C installieren. Diese Bibliothek ist eine verbesserte Version der LiquidCrystal-Bibliothek, die mit Ihrer Arduino-IDE mitgeliefert wird.
+
+Um die Bibliothek zu installieren, navigieren Sie zu Sketch > Include Library > Manage Libraries... Warten Sie, bis der Library Manager den Bibliotheksindex heruntergeladen und die Liste der installierten Bibliotheken aktualisiert hat.
+
+Filtern Sie Ihre Suche durch Eingabe von 'liquidcrystal'. Es sollte ein paar Einträge geben. Suchen Sie nach LiquidCrystal I2C library von Frank de Brabander. Klicken Sie auf diesen Eintrag, und wählen Sie dann Installieren.
+
+\subsection{Imlementierung im Projekt}
+
+Der Sketch beginnt mit der Einbindung der LiquidCrystal\_I2C-Bibliothek.
+\begin{lstlisting}[style=CStyle]
+#include <LiquidCrystal_I2C.h>
+\end{lstlisting}\textbf{}
+
+Anschließend wird ein Objekt der Klasse LiquidCrystal\_I2C erstellt. Dieses Objekt verwendet 3 Parameter LiquidCrystal\_I2C(address,columns,rows). Hier müssen Sie die Standardadresse in die Adresse ändern, die Sie zuvor gefunden haben, falls sie anders ist, und die Abmessungen des Displays.
+
+\begin{lstlisting}[style=CStyle]
+LiquidCrystal_I2C lcd(0x3F,16,2);
+\end{lstlisting}\textbf{}
+
+Sobald das LiquidCrystal\_I2C-Objekt deklariert ist, können Sie auf spezielle Methoden zugreifen, die für das LCD spezifisch sind.
+
+In der Funktion "setup" wird die Funktion init() aufgerufen, um das Objekt lcd zu initialisieren. Anschließend wird die Funktion clear() aufgerufen. Diese Funktion löscht den LCD-Bildschirm und verschiebt den Cursor in die obere linke Ecke. Mit der Funktion backlight() wird die Hintergrundbeleuchtung des LCD-Bildschirms eingeschaltet.
+
+\begin{lstlisting}[style=CStyle]
+lcd.init();
+lcd.clear();         
+lcd.backlight();
+\end{lstlisting}\textbf{}
+
+Als nächstes wird die Cursorposition auf die dritte Spalte und die erste Zeile des LCDs gesetzt, indem die Funktion lcd.setCursor(2,0) aufgerufen wird. Die Cursorposition gibt die Stelle an, an der der neue Text auf dem LCD angezeigt werden soll. Die linke obere Ecke wird als col=0, row=0 betrachtet.
+
+\begin{lstlisting}[style=CStyle]
+lcd.setCursor(2,0);
+\end{lstlisting}\textbf{}
+
+Anschließend wird die Zeichenkette "Hello World!" durch Aufruf der Funktion print() gedruckt.
+
+\begin{lstlisting}[style=CStyle]
+lcd.print("Hello world!");
+\end{lstlisting}\textbf{}
+
+In ähnlicher Weise setzen die nächsten beiden Zeilen den Cursor auf die dritte Spalte und die zweite Zeile und drucken 'LCD Tutorial' auf das LCD.
+
+\begin{lstlisting}[style=CStyle]
+lcd.setCursor(2,1);
+lcd.print("LCD Tutorial");
+\end{lstlisting}\textbf{}
+
+Wir haben auch die Adressen gefunden und die Bibliothek eingebunden.
+\begin{lstlisting}[style=CStyle]
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2); // I2C address 0x27, 16 column and 2 rows
+LiquidCrystal_I2C lcd1(0x03F, 16, 2); // I2C address 0x03F, 16 column and 2 rows
+\end{lstlisting}\textbf{}
+
+Im Setup Funktion starten die beide Displays mit Rücklichter.
+
+\begin{lstlisting}[style=CStyle]
+lcd.init(); // initialize the lcd
+lcd.backlight();
+
+lcd1.init(); // initialize the lcd 1
+lcd1.backlight();
+\end{lstlisting}\textbf{}
+
+Danach haben wir mit clear() und setCurson() Funktionen Informationen von Sensoren auf dem Display Dargestellt.
+
+
+\section{Ergebnisse}
+
+
+
+
 
 \begin{thebibliography}{00}
 \bibitem{b1} https://github.com/adafruit/DHT-sensor-library
@@ -275,7 +640,7 @@ void loop()
 \bibitem{b3} https://learn.adafruit.com/pir-passive-infrared-proximity-motion-sensor/overview
 \bibitem{b4} https://learn.adafruit.com/pir-passive-infrared-proximity-motion-sensor/how-pirs-work
 \bibitem{b5} https://learn.adafruit.com/pir-passive-infrared-proximity-motion-sensor/connecting-to-a-pir
-\bibitem{b6}
+\bibitem{b6} https://wiki.seeedstudio.com/Grove-RTC/
 \bibitem{b7}
 \end{thebibliography}
 \vspace{12pt}
