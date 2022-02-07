@@ -74,6 +74,20 @@ imron.gamidli@lt.hs-fulda.de}
 dht22, arduino, uno, 
 \end{IEEEkeywords}
 
+\section{Einführung}
+Dieses Projekt geht um ein Weather-Clock, dass es verschiedene Funktionen haben. Die Idee ist, eine Wetteruhr mit mehreren Funktionen zu haben, die verschiedene Merkmale von Wetter und Zeit messen und anzeigen kann. Die Funktionen werden flexibel und Portal sein. Man konnte die Funktion der Uhrzeit und des Datums ändern und auch die Eigenschaften des Wetters sehen. Die Motivation hinter diesem Projekt ist die Einsparung von Strom sowie die Berücksichtigung des Bildschirms durch einen Bewegungssensor, der neben seinen Funktionalitäten eine gute Initiative zum Energiesparen sein kann.
+
+
+Wir haben viel über die Wetteruhr recherchiert, aber diese Energiesparfunktion hat gefehlt. Wir dachten, es wäre eine gute Idee, es zu haben. Wenn man sich im Raum oder in der Nähe des Bildschirms nicht befindet, sollte die Uhr oder das Display nicht eingeschaltet sein, wenn sich im Raum etwas bewegt, wird es wieder angezeigt. In der Zukunft kann man die Merkmale und Funktionen dieser Uhr erweitern und aktualisieren. Dies kann auch als Wecker verwendet werden. Da wir einen Bewegungssensor verwenden, um die Bewegung und das Drehen der Displayhelligkeit zu erfassen, kann man ihn auch als Alarm verwenden, um zu benachrichtigen, dass jemand kommt oder geht, insbesondere in öffentlichen Geschäften.
+
+Es misst und zeigt die Uhrzeit, die Temperatur, die F¬euchtigkeit, den Luftdruck und die Höhenlage. Die Funktionen der Uhrzeit sind interaktiv, das heißt, kann man durch drei Knöpfen das Datum und Uhr andern und speichern. Die Darstellung von Uhr und Temperatur werden auf den zwei Displays gezeigt. Die beide sind 2x16 I2C Displays. 
+Wir haben drei Sensoren, BMP280, DHT22, PIR verwendend. Der BMP280 misst der Luftdruck und die Höhenlage, der DHT22 misst die Temperatur, die Feuchtigkeit. Durch PIR Bewegung Sensor wird überprüft, wenn keine Bewegung in dem Raum ist, wird dann die Helligkeit von Displays ausgeschalten.
+
+Außerdem wird RTC (Real Time Clock) benutzt, können wir dadurch die Echtzeit Uhr und Datum auf dem Display zeigen. Zudem RTC gibt es drei Knöpfen, die Funktionen von RTC andern und speichern lassen.  
+
+Zum Protokoll verwenden wir I2C, mit dem kann man mehrere Slaves mit einem einzigen Master (wie SPI) verbinden und auch kann man mehrere Master haben, die einzelne oder mehrere Slaves steuern. Es ist sehr nützlich, wenn man mehr als ein Mikrocontroller Daten auf einer einzigen Speicherkarte protokolliert oder Text auf einem einzigen LCD anzeigt.
+
+
 \section{DHT22 Sensor}
 
 \subsection{Beschreibung}
@@ -626,11 +640,6 @@ lcd1.backlight();
 \end{lstlisting}\textbf{}
 
 Danach haben wir mit clear() und setCurson() Funktionen Informationen von Sensoren auf dem Display Dargestellt.
-
-
-\section{Ergebnisse}
-
-
 
 
 
