@@ -87,6 +87,104 @@ Außerdem wird RTC (Real Time Clock) benutzt, können wir dadurch die Echtzeit U
 
 Zum Protokoll verwenden wir I2C, mit dem kann man mehrere Slaves mit einem einzigen Master (wie SPI) verbinden und auch kann man mehrere Master haben, die einzelne oder mehrere Slaves steuern. Es ist sehr nützlich, wenn man mehr als ein Mikrocontroller Daten auf einer einzigen Speicherkarte protokolliert oder Text auf einem einzigen LCD anzeigt.
 
+\section{Protokoll}
+Das I2C-Protokoll ist das Serial-Communication-Protocol, die für langsame Mikrocontrollern Geräte, z. B. EEPROM (Electrically Erasable Programmable Read-only Memory), ADC (Analog To Digital Converter) und RTC (Real Time Clock) verwendet werden. Der I2C ist ein Zweidraht-Kommunikationsprotokoll, dass für die Kommunikation nur zwei Kabel verwendet. Dabei wird ein Draht für die Daten SDA (Serial data line) und der andere Draht für die Clock SCL (Serial clock line ) verwendet. Beim I2C sind die Kommunikation zwischen beide Buse bidirektional, das heißt, dass der Master die Daten vom Slave schicken und empfangen kann. Tatsächlich wird der Taktbus durch den Master kontrolliert. Jedoch kann der Slave manchmal das Clock-signal unterdrücken. 
+
+\subsection{Schnittstelle}
+Der I2C benutzen zwei Leitungen SCL und SDA, welche bidirektionale Buse sind. Die bidirektionale Buse Linien werden durch Master und Slave unter Verbindung von Open-Drain-Ausgangstufen und einem Pull-up-Widerstand (Rp) implementiert, die mit einer positiven Versorgungsspannung verbunden sind.
+
+Der Pull-up-Widerstandswert hängt vom Systemaufbau, von der Kapazität der Schaltung oder der Kabel- und Bustaktfrequenz, ab. Logischerweise kann der Wert für den Pull-up-Widerstandswert 10kohm sein und die Kapazitäten-Lasten von SDA und SCL Leitung müssen gleich sein. Die Kapazitäten-Lasten-Leitung soll nicht länger als 30cm sein. 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\linewidth]{fig9}
+	\caption{Beispiel von SDA und SCL mit bi-direktionalen Kommunikation und externerem Pull-up-Widerstand (Rp).}
+	\label{fig:fig9}
+\end{figure}
+
+
+\subsection{Adressen}
+
+Bei  der grundlegenden Kommunikation des I2Cs werden die Übertragung von 8 Bits oder Bytes verwendet. Jedes Slave des I2C Geräts hat eine 7-Bit Adresse, die auf dem Bus eindeutig sein sollen. Jedoch braucht das Master-Gerät keine Adresse, weil das Clock (über SCL) generiert und an die individuelle Slave-Geräte adressiert. 
+Tatsächlich  wird die I2C-Adresse durch einen 7-stelligen Binärwert dargestellt. Standardmäßig ist die Adresse auf 64 (1000000b) eingestellt. Sie folgt immer durch ein Schreib-bit (0) und ein Lese-bit (1). Wenn Bit 0 auf 1 gesetzt wird, liest das Master-Gerät vom Slave-Gerät. 
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\linewidth]{fig10}
+	\caption{Beispiel von 7-Stillegen Binärwert Adresse}
+	\label{fig:fig10}
+\end{figure}
+
+
+\subsection{Kommunikation}
+
+Der I2C ist ein 8-Bit-Kommunkationsprotokoll. Das I2C-Protokoll hat ein Start und ein Stopp Bedingungen zu Beginn und am Ende einer Übertragung. Beim I2C wird durch ACK- (Acknowledgement) oder NACK- (Not Acknowledgement) nach jedem Byte bestätigt.
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\linewidth]{fig14}
+	\caption{Beispiel von Kommutation von SRART und STOP durch Write(0) und Read(1) Übertragung.}
+	\label{fig:fig14}
+\end{figure}
+
+
+
+\begin{itemize}
+\item Die Kommunikation muss mit START angefangen werden : START-Bedingung
+\item	Dem Start Bit wird immer durch Adresse von Slave gefolgt. 
+\item	Die Adresse von Slave werden durch READ und NOT WRITE Bit gefolgt. 
+\item Das Empfänger-Gerät ( entweder Master oder Slave ) müssen ein ACKNOWLEDGE Bit schicken.  
+\item	Die Kommunikation müssen mit STOP anfangen werden : STOP-Bedingung
+	
+\end{itemize}
+
+\subsection{	START und STOP – Bedingungen}
+\subsubsection{START Bedingung: }
+Ein Übergang von einer hohen zu einer niedrigen SDA-Leitung, wird als START-Bedingung bezeichnet, da die SCL-Leitung hoch ist. Standardmäßig ist der Status von SDA und SCL Leitung hoch. Die Kommunikation auf Leitung wird von dem Master angefangen. Die START- Bedingung wird immer vom Master bestätigt und der I2C Bus wird nach der Bestätigung des START-Bits als besetzt betrachtet. 
+
+\subsubsection{STOP Bedingung: }
+Eine Übergang von niedriger zu hoher SDA-Leitung, während die SCL-Leitung hoch ist, wird als STOP-Bedingung bezeichnet. Die STOP–Bedingung wird immer vom Master aktiviert, um die Kommunikation zu stoppen. Nach der Aktivierung des STOP Bits wird den I2C- Bus frei. 
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\linewidth]{fig6}
+	\caption{Beispiel von START und STOP – Bedingungen}
+	\label{fig:fig6}
+\end{figure}
+
+\begin{itemize}
+	\item	Start Bedingung: ein Übergang von HOCH nach NIEDRIG auf der 
+	\item  Stop Bedingung: ein Übergang von NIEDRIG nach HOCH auf der SDA-Leitung, weil SCL HOCH ist
+\end{itemize}
+
+\subsection{Read /Write Bit}
+
+Der Adresse-frame hat einzelne Bits am Ende und sagt dem Slave Bescheid, ob der Master ein Datei davon empfangen und schreiben möchte. Wenn der Master die Daten an den Slave schicken möchte, ist das Read/Write Bit ein Niederspannungspegel. Wenn der Master eine Datei von dem Slave fordert, ist das ein Hochspannungspegel. 
+
+\subsection{Datentransfer}
+Die Daten werden in 8-Bit Paketen (Bytes) auf dem I2C Bus übertragt.  Es gibt keine Begrenzung bei der Anzahl der Bytes, aber jedes Byte muss vom Bestätigungsbit (Acknowledge bit) gefolgt werden. Das Bit signalisiert, ob das Gerät bereit ist, mit dem nächsten Byte fortzufahren. Der Master muss die Clock- Pulse für alle Datenbits und Bestätigungsbit generieren. Wenn die Pulse des Slave -Geräts nicht die Übertragung bestätigen, bedeutet das, dass es keine weiteren Daten gibt oder die Übertragung nicht bereit ist. Dann muss das Master-Gerät entweder eine Stopbedingung oder eine wiederholte Startbedingung erzeugen
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\linewidth]{fig7}
+	\caption{Beispiel von Datentransfer}
+	\label{fig:fig7}
+\end{figure}
+
+\begin{itemize}
+	\item Jedes Byte soll von einem Bestätigungsbit (acknowledge bit) gefolgt werden.
+		\item 	Die Anzahl der übertragenen Datenbytes (data bytes) pro Übertragung ist nicht eingeschränkt. 
+		\item 	Wenn ein Slave kein weiteren Datenbyte empfangen oder senden kann, kann er die Taktleitung SCL LOW (Clock strechting ) halten, um den Master in einen Wartezustand zu zwingen. 
+\end{itemize}
+
+\subsection{Acknowledge ( ACK) / Not Acknowledge  (NACK)}
+Jedes übertragene Byte wird auf dem I2C Bus von einer Acknowledge-Bedingung  von dem Empfänger gefolgt. Das heißt, dass nachdem der Master SCL nach NIEDRIG gezogen hat, um die Übertragung des 8. Bits zu ergänzen, wird der SDA während der 9.Bitzeit nach NIEDRIG von dem Empfänger gezogen. Wenn nach der Übertragung des 8.Bits vom Empfänger der SDA Leitung nicht nach NIEDRIG  gezogen wird, bezeichnet man das als Not-Acknowledge ( NACK) Bedingung.
+Das Schaubild zeigt, dass jedes Byte, das vom Empfänger generiert wird, von einem Acknowledge or Not Achnowledge gefolgt wird. Außerdem zeigen die dick gedruckten Linien, dass der Sensor die SDA-Linie kontrolliert.   
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\linewidth]{fig8}
+	\caption{Beispiel von  Acknowdelge /Not Acknowledge}
+	\label{fig:fig8}
+\end{figure}
 
 \section{DHT22 Sensor}
 
