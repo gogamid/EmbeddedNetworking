@@ -71,7 +71,7 @@ Das Wetteruhrprojekt ist eine multifunktionale Uhr,die  mehrere Funktionen hat. 
 \end{abstract}
 
 \begin{IEEEkeywords}
-dht22, arduino, uno, 
+I2C, BMP280, DHT22, PIR, RTC, LCD,SPI, SDA, SCL
 \end{IEEEkeywords}
 
 \section{Einführung}
@@ -290,14 +290,103 @@ LCDS kommen in vielen Größen und Farben. Zum Beispiel 16×1, 16×4, 20×4, mit
 
 Wir haben zwei LCDs 16x2 für unsere Projekt verwendet. Die zwei Displays zeigen die Ergebnisse von den Sensoren und RTC.  Das erste Display zeigt die Uhrzeit mit Datum und das zweite Display zeigt die Temperatur, die Feuchtigkeit, der Luftdruck, und Altitude. 
 Zudem werden drei Knöpfen (Push-Buttons) durch Pin6, Pin7, und Pin8 mit LCDs benutzt, dadurch kann man die Uhr und Datum auf dem Display andern und speichern.  
+\begin{figure}
+	\centering
+	\includegraphics[width=1\linewidth]{fig37}
+	\caption{Projekt Anblick}
+	\label{fig:fig37}
+\end{figure}
+
+\section{BMP280 SENSOR}
+\subsection{Beschreibung}
+BMP280 ist die beste kostengünstige Sensorlösung zur Messung von barometrischem Druck und Temperatur von Bosch. Da sich der Druck mit der Höhe ändert, kann man nämlich ihn auch als Höhenmesser verwenden. 
+
+Der BMP280 ist ein absolut barometrischer Drucksensor, der besonders für mobile Anwendungen geeignet ist. Seine geringen Abmessungen und sein geringer Stromverbrauch ermöglichen den Einsatz in batteriebetriebenen Geräten wie Mobiltelefonen, GPS-Modulen oder Uhren.
+
+Der BMP280 funktioniert ganz gut für Anwendungen wie die Bodenniveauerkennung, weil die Genauigkeit davon eine hervorragende relative von ±0,12 hPa ist, was einem Höhenunterschied von ±1 m entspricht, und einen Offset-Temperaturkoeffizienten (TCO) von nur 1,5 Pa/K (äquivalent bis 12,6 cm/K).
 
 \begin{figure}
 	\centering
-	\includegraphics[width=1\linewidth]{fig31}
-	\caption{Projekt Anblick}
-	\label{fig:fig31}
+	\includegraphics[width=0.47\linewidth]{fig35}
+	\caption{BMP280 }
+	\label{fig:fig35}
 \end{figure}
 
+\subsection{Funktionsweise}
+Dieser Sensor kann mit zwei Protokollen, I2C und SPI, verwendet und konfiguriert werden. Für dieses Projekt haben wir das I2C-Protokoll verwendet und die Verkabelung für I2C mit diesem Sensor ist wie folgt:
+
+\begin{enumerate}
+\item 	Verbinden Sie Vin (rotes Kabel bei der STEMMA-Version) mit der Stromversorgung, 3-5 V sind in Ordnung. 
+\item  Verwenden Sie dieselbe Spannung, auf der die Mikrocontrollerlogik basiert. Bei den meisten Arduinos sind das 5V
+	
+\item  Verbinden Sie GND (schwarzes Kabel bei der STEMMA-Version) mit der gemeinsamen Strom-/Datenerde
+	
+\item 	Verbinden Sie den SCK-Pin (gelber Draht bei der STEMMA-Version) mit dem I2C-Takt-SCL-Pin Ihres Arduino.  Auf einem UNO \& '328-basierten Arduino ist dies auch als A5 bekannt, auf einem Mega ist es auch als digital 21 und auf einem Leonardo/Micro als digital 3 bekannt
+	
+\item Verbinden Sie den SDI-Pin (blauer Draht bei der STEMMA-Version) mit dem I2C-Daten-SDA-Pin Ihres Arduino. Auf einem UNO \& '328-basierten Arduino ist dies auch als A4 bekannt, auf einem Mega ist es auch als Digital 20 und auf einem Leonardo/Micro als Digital 2 bekannt
+\end{enumerate}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\linewidth]{fig36}
+	\caption{BMP280 Wiring }
+	\label{fig:fig36}
+\end{figure}
+
+\subsection{Impelmentierung im Projekt }
+
+Dieser Sensor wurde in unserem Projekt zur Messung von Luftdruck und Höhe verwendet.Dazu braucht man die Libraries und die Kommunikation-Logik für dieser Sensor. 
+
+\begin{lstlisting}[style=CStyle]
+	#include <Wire.h>
+	#include "SPI.h" //I2C und SPI
+	#include "Adafruit_BMP280.h"
+\end{lstlisting}
+
+Durch diese Libraries kann man die Funktionen und Eigenschaften von Sensor und die Kommunikation- Protokoll von dem Arduino Zugriff haben. Das Wir.h ermöglicht der I2C Protokoll zu verwenden.  
+
+\begin{lstlisting}[style=CStyle]
+	//Setup connection of the sensor
+	Adafruit_BMP280 bmp; // I2C
+\end{lstlisting}
+
+Zum I2C- Protokoll braucht man ein Objekt, dass dadurch zum Sensor zugreifen und die Kommunikation durchzuführen. 
+
+\begin{lstlisting}[style=CStyle]
+	//Variables
+	float pressure;   //To store the barometric pressure (Pa)
+	int altimeter;    //To store the altimeter (m) (you can also use it as a float variable)
+\end{lstlisting}
+
+Wir messen nur Luftdruck und Altitude durch BMP280. Also braucht man die Variablen, dadurch die Daten zu speichern und sie auf dem Display anzuzeigen. 
+
+\begin{lstlisting}[style=CStyle]
+	bmp.begin();
+\end{lstlisting}
+
+Durch BMP Objekt kann man die begin() -Funktion und auch die andere Funktionen zugreifen. Also begin( )-funktion ist ein Teil des seriellen Objekts im Arduino.Die  weist das serielle Objekt an, Initialisierungsschritte durchzuführen, um Daten zu senden und empfangen.
+
+\begin{lstlisting}[style=CStyle]
+	//Read values from the sensor:
+	pressure = bmp.readPressure();
+	//temperature = bmp.readTemperature();
+	altimeter = bmp.readAltitude (1030);
+\end{lstlisting}
+
+Hier wurden die Temperatur und Altimeter durch BMP Objekt gelesen und dann werden sie auf dem Display gezeigt. 
+
+\begin{lstlisting}[style=CStyle]
+	//Display 1
+	lcd1.clear();
+	lcd1.setCursor(0, 1);
+	lcd1.print("hPa:");
+	lcd1.print(pressure/100); 
+	lcd1.setCursor(8, 1);
+	lcd1.print(" alt:");
+	lcd1.print(altimeter);
+\end{lstlisting}
+
+Nach der Messung und Datenübertragung und Kommunikation zwischen Arduino und BMP280 Sensor, werden die gemessene Daten von Luftdruck und Altimeter auf dem ersten Display gezeigt. 
 
 \section{DHT22 Sensor}
 
@@ -861,7 +950,9 @@ Danach haben wir mit clear() und setCurson() Funktionen Informationen von Sensor
 \bibitem{b4} https://learn.adafruit.com/pir-passive-infrared-proximity-motion-sensor/how-pirs-work
 \bibitem{b5} https://learn.adafruit.com/pir-passive-infrared-proximity-motion-sensor/connecting-to-a-pir
 \bibitem{b6} https://wiki.seeedstudio.com/Grove-RTC/
-\bibitem{b7}
+\bibitem{b7} https://learn.adafruit.com/adafruit-bmp280-barometric-pressure-plus-temperature-sensor-breakout/arduino-test 
+\bibitem{b8} https://learn.adafruit.com/adafruit-bmp280-barometric-pressure-plus-temperature-sensor-breakout
+\bibitem{b9} https://i2c.info/
 \end{thebibliography}
 \vspace{12pt}
 
